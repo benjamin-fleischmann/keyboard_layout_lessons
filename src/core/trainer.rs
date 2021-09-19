@@ -1,19 +1,19 @@
-use crate::lesson::Lesson;
+use crate::core::lesson::Lesson;
 use termion::color;
 
-pub struct Trainer<'a>{
-    lesson: &'a Lesson
+pub struct Trainer<'a> {
+    lesson: &'a Lesson,
 }
 
-impl Trainer<'_>{
-    pub fn train(&self)  {
+impl Trainer<'_> {
+    pub fn train(&self) {
         let lesson_content = self.lesson.generate_lesson_content();
         println!("{}", color::Fg(color::LightWhite));
-
+        println!("{}", lesson_content);
     }
 }
 
 #[cfg(test)]
 mod test_lesson {
     use super::*;
- }
+}
