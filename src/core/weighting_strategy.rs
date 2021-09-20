@@ -1,6 +1,8 @@
-use crate::core::key::Key;
-use serde::{Deserialize, Serialize};
 use std::fmt::Debug;
+
+use serde::{Deserialize, Serialize};
+
+use crate::core::key::Key;
 
 pub trait ProvideKeyWeight {
     fn get_key_weight(&self, key: Key) -> f64;
@@ -21,11 +23,13 @@ impl ProvideKeyWeight for FocusKey {
         }
     }
 }
+
 #[derive(PartialEq, Debug, Serialize, Deserialize, Clone)]
 pub enum WeightingStrategy {
     EqualWeight,
     FocusKey(FocusKey),
 }
+
 impl ProvideKeyWeight for WeightingStrategy {
     fn get_key_weight(&self, key: Key) -> f64 {
         match self {
@@ -37,8 +41,9 @@ impl ProvideKeyWeight for WeightingStrategy {
 
 #[cfg(test)]
 mod test_weighting_strategy {
-    use super::*;
     use pretty_assertions::assert_eq;
+
+    use super::*;
 
     #[test]
     fn always_eq_weight_always_returns_1() {
