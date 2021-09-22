@@ -1,42 +1,73 @@
+use std::clone::Clone;
+
 use rand;
 use rand::seq::SliceRandom;
 use serde::{Deserialize, Serialize};
-use std::clone::Clone;
-use std::cmp::Ordering::Less;
 
-use crate::core::key::Key;
+use crate::core::character::Character;
 use crate::core::weighting_strategy::WeightingStrategy;
 
 #[derive(PartialEq, Debug, Serialize, Deserialize, Clone)]
 pub struct Lesson {
-    pub keys: Vec<Key>,
-    pub weighting_strategy: WeightingStrategy,
-    pub lesson_length: u32,
-    pub word_length: u8,
+    name: String,
+    keys: Vec<Character>,
+    weighting_strategy: WeightingStrategy,
+    lesson_length: u32,
+    word_length: u8,
 }
 
 impl Lesson {
-    pub fn add_key(&self, key: Key, weighting_strategy: WeightingStrategy) -> Lesson {
+    pub fn name(&self) -> &str {
+        self.name.as_str()
+    }
+    pub fn add_key(
+        &self,
+        name: String,
+        key: Character,
+        weighting_strategy: WeightingStrategy,
+    ) -> Lesson {
         let mut new_keys = self.keys.clone();
         new_keys.push(key);
         Lesson {
+            name,
             keys: new_keys,
             weighting_strategy,
             lesson_length: self.lesson_length,
             word_length: self.word_length,
         }
     }
+    pub fn add_chars(
+        &self,
+        name: String,
+        chars: &[char],
+        weighting_strategy: WeightingStrategy,
+    ) -> Lesson {
+        let mut new_keys = self.keys.clone();
+        for char in chars {
+            new_keys.push(Character::new(*char))
+        }
+        Lesson {
+            name,
+            keys: new_keys,
+            weighting_strategy,
+            lesson_length: self.lesson_length,
+            word_length: self.word_length,
+        }
+    }
+
     pub fn from_chars(
+        name: String,
         chars: &[char],
         char_count: u32,
         word_length: u8,
         weighting_strategy: WeightingStrategy,
     ) -> Lesson {
-        let mut new_keys: Vec<Key> = Vec::new();
+        let mut new_keys: Vec<Character> = Vec::new();
         for char in chars {
-            new_keys.push(Key::new(*char))
+            new_keys.push(Character::new(*char))
         }
         Lesson {
+            name,
             keys: new_keys,
             weighting_strategy,
             lesson_length: char_count,
@@ -70,7 +101,8 @@ mod test_lesson {
     #[test]
     fn has_roughly_specified_length() {
         let lesson = Lesson {
-            keys: vec![Key { value: 'a' }],
+            name: String::new(),
+            keys: vec![Character { value: 'a' }],
             weighting_strategy: WeightingStrategy::EqualWeight,
             lesson_length: 10,
             word_length: 2,
@@ -85,7 +117,8 @@ mod test_lesson {
     #[test]
     fn content_does_not_start_or_end_with_whitespace() {
         let lesson = Lesson {
-            keys: vec![Key { value: 'a' }],
+            name: String::new(),
+            keys: vec![Character { value: 'a' }],
             weighting_strategy: WeightingStrategy::EqualWeight,
             lesson_length: 10,
             word_length: 2,
@@ -96,22 +129,28 @@ mod test_lesson {
 
     #[test]
     fn append_key_to_lesson() {
-        let original_key = Key { value: 'a' };
+        let original_key = Character { value: 'a' };
         let original_lesson = Lesson {
+            name: String::from("original_lesson"),
             keys: vec![original_key.clone()],
             weighting_strategy: WeightingStrategy::EqualWeight,
             lesson_length: 10,
             word_length: 2,
         };
-        let extra_key = Key { value: 'b' };
+        let extra_key = Character { value: 'b' };
 
         let expected_lesson = Lesson {
+            name: String::from("lesson name"),
             keys: vec![original_key.clone(), extra_key.clone()],
             weighting_strategy: WeightingStrategy::EqualWeight,
             lesson_length: 10,
             word_length: 2,
         };
-        let extended_lesson = original_lesson.add_key(extra_key, WeightingStrategy::EqualWeight);
+        let extended_lesson = original_lesson.add_key(
+            String::from("lesson name"),
+            extra_key,
+            WeightingStrategy::EqualWeight,
+        );
 
         assert_eq!(extended_lesson, expected_lesson)
     }

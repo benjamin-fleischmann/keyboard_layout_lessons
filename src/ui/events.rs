@@ -2,17 +2,15 @@ use std::io::stdin;
 use std::sync::mpsc::{channel, Receiver, RecvError, Sender};
 use std::thread;
 use std::time::Duration;
-use termion::event::{Event, Key};
+
+use termion::event::Event;
 use termion::input::TermRead;
 
-pub enum OptionalKey {
-    Key(Key),
-    NoKey,
-}
+use crate::core::enums::OptionalInput;
 
 pub struct Events {
-    rx: Receiver<OptionalKey>,
-    _tx: Sender<OptionalKey>,
+    rx: Receiver<OptionalInput>,
+    _tx: Sender<OptionalInput>,
 }
 
 impl Events {
@@ -27,15 +25,15 @@ impl Events {
                         match event {
                             Event::Key(key) => {
                                 // info!("event: {:?}", event);
-                                event_tx.send(OptionalKey::Key(key)).unwrap();
+                                event_tx.send(OptionalInput::InputKey(key)).unwrap();
                             }
                             _ => {
-                                event_tx.send(OptionalKey::NoKey).unwrap();
+                                event_tx.send(OptionalInput::NoInput).unwrap();
                             }
                         }
                     }
                     Err(_) => {
-                        event_tx.send(OptionalKey::NoKey).unwrap();
+                        event_tx.send(OptionalInput::NoInput).unwrap();
                         // error!("{:?}", err);
                     }
                 }
@@ -47,7 +45,7 @@ impl Events {
 
     /// Attempts to read an event.
     /// This function block the current thread.
-    pub fn next(&self) -> Result<OptionalKey, RecvError> {
+    pub fn next(&self) -> Result<OptionalInput, RecvError> {
         self.rx.recv()
     }
 }
