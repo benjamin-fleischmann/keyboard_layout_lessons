@@ -1,14 +1,20 @@
+use std::collections::HashMap;
+
 use crate::core::lesson::Lesson;
+use crate::core::stats::TrainingRecord;
 
 pub struct SelectableLessonList {
     lessons: Vec<Lesson>,
     selected_index: Option<usize>,
+    training_records: HashMap<usize, Vec<TrainingRecord>>,
 }
+
 impl SelectableLessonList {
     pub fn new(lessons: Vec<Lesson>) -> Self {
         Self {
             lessons,
             selected_index: None,
+            training_records: HashMap::new(),
         }
     }
     pub fn lessons(&self) -> &[Lesson] {
@@ -19,6 +25,18 @@ impl SelectableLessonList {
     }
     pub fn current_lesson(&self) -> Option<&Lesson> {
         self.lessons.get(self.selected_index?)
+    }
+
+    pub fn current_lesson_records(&self) -> &[TrainingRecord] {
+        //Option<&Vec<TrainingRecord>> {
+        let maybe_data = match self.selected_index {
+            None => None,
+            Some(index) => self.training_records.get(&index),
+        };
+        match maybe_data {
+            Some(a) => a.as_ref(),
+            None => &[] as &[TrainingRecord],
+        }
     }
     pub fn select_next_lesson(&mut self) {
         match self.selected_index {
@@ -49,6 +67,13 @@ impl SelectableLessonList {
             }
         }
     }
+    pub fn add_record_to_current_session(&mut self, trainig_record: TrainingRecord) {
+        let mut entry = self
+            .training_records
+            .entry(self.selected_index.unwrap())
+            .or_insert(Vec::new());
+        entry.push(trainig_record);
+    }
 }
 #[cfg(test)]
 mod test_selectable_session_list {
@@ -78,6 +103,7 @@ mod test_selectable_session_list {
         let mut unit = SelectableLessonList {
             lessons: get_sample_lessons(),
             selected_index: Some(0),
+            training_records: HashMap::new(),
         };
         unit.select_next_lesson();
         assert_eq!(unit.selected_index, Some(1))
@@ -87,6 +113,7 @@ mod test_selectable_session_list {
         let mut unit = SelectableLessonList {
             lessons: get_sample_lessons(),
             selected_index: Some(1),
+            training_records: HashMap::new(),
         };
         unit.select_next_lesson();
         assert_eq!(unit.selected_index, Some(1))
@@ -96,6 +123,7 @@ mod test_selectable_session_list {
         let mut unit = SelectableLessonList {
             lessons: get_sample_lessons(),
             selected_index: None,
+            training_records: HashMap::new(),
         };
         unit.select_next_lesson();
         assert_eq!(unit.selected_index, Some(0))
@@ -105,6 +133,7 @@ mod test_selectable_session_list {
         let mut unit = SelectableLessonList {
             lessons: get_sample_lessons(),
             selected_index: Some(1),
+            training_records: HashMap::new(),
         };
         unit.select_prev_lesson();
         assert_eq!(unit.selected_index, Some(0))
@@ -114,6 +143,7 @@ mod test_selectable_session_list {
         let mut unit = SelectableLessonList {
             lessons: get_sample_lessons(),
             selected_index: Some(0),
+            training_records: HashMap::new(),
         };
         unit.select_prev_lesson();
         assert_eq!(unit.selected_index, Some(0))
@@ -123,6 +153,7 @@ mod test_selectable_session_list {
         let mut unit = SelectableLessonList {
             lessons: get_sample_lessons(),
             selected_index: None,
+            training_records: HashMap::new(),
         };
         unit.select_prev_lesson();
         assert_eq!(unit.selected_index, Some(1))
@@ -132,6 +163,7 @@ mod test_selectable_session_list {
         let mut unit = SelectableLessonList {
             lessons: get_sample_lessons(),
             selected_index: Some(0),
+            training_records: HashMap::new(),
         };
         assert_eq!(unit.current_lesson(), unit.lessons.get(0))
     }
@@ -140,6 +172,7 @@ mod test_selectable_session_list {
         let mut unit = SelectableLessonList {
             lessons: get_sample_lessons(),
             selected_index: None,
+            training_records: HashMap::new(),
         };
         assert_eq!(unit.current_lesson(), None)
     }

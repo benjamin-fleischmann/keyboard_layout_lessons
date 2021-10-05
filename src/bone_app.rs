@@ -3,7 +3,7 @@ use crate::core::lesson::Lesson;
 use crate::core::weighting_strategy::WeightingStrategy;
 
 fn create_bone_home_row_lessons() -> Vec<Lesson> {
-    let lesson_length = 40;
+    let lesson_length = 8;
     let word_length = 4;
 
     let mut lessons: Vec<Lesson> = Vec::new();

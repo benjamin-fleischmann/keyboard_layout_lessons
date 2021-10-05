@@ -51,6 +51,8 @@ impl TrainerApp {
             Key::Char(c) => {
                 self.lesson_progress.handle_key(c);
                 if self.lesson_progress.is_finished() {
+                    self.lesson_list
+                        .add_record_to_current_session(self.lesson_progress.training_record());
                     self.state = AppState::LessonSelection;
                 }
             }

@@ -18,7 +18,9 @@ mod bone_app;
 mod core;
 mod layouts;
 mod ui;
-
+mod wrapper;
+#[macro_use]
+extern crate cute;
 fn start_terminal_gui(mut app: TrainerApp) -> Result<(), io::Error> {
     let mut terminal = create_initialized_terminal()?;
 
