@@ -12,30 +12,30 @@ use crate::ui::rendering::draw;
 
 use self::core::enums::OptionalInput;
 use crate::ui::events::Events;
+#[macro_use]
+extern crate cute;
 
 mod app;
-mod bone_app;
+// mod bone_app;
 mod core;
 mod layouts;
 mod ui;
 mod wrapper;
-#[macro_use]
-extern crate cute;
+
 fn start_terminal_gui(mut app: TrainerApp) -> Result<(), io::Error> {
     let mut terminal = create_initialized_terminal()?;
-
     // Setup event
     let events = Events::new(Duration::new(0, 500));
     loop {
-        terminal.draw(|mut f| draw(f, &app));
+        terminal.draw(|f| draw(f, &app))?;
         let event = events.next().unwrap_or(OptionalInput::InputKey(Key::Esc));
 
         app.tick(event);
         if app.state() == &AppState::Terminated {
+            app.save();
             break;
         }
     }
-
     terminal.show_cursor()?;
     Ok(())
 }
@@ -50,8 +50,8 @@ fn create_initialized_terminal() -> Result<Terminal<TermionBackend<RawTerminal<S
     Ok(terminal)
 }
 
-fn main() -> Result<(), io::Error> {
-    let mut app = bone_app::create_bone_trainer();
+fn main() -> anyhow::Result<()> {
+    let mut app = TrainerApp::load(String::from("save.json"))?;
     start_terminal_gui(app)?;
     Ok(())
 }

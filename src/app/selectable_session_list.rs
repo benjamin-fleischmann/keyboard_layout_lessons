@@ -1,8 +1,11 @@
 use std::collections::HashMap;
 
+use serde::{Deserialize, Serialize};
+
 use crate::core::lesson::Lesson;
 use crate::core::stats::TrainingRecord;
 
+#[derive(Serialize, Deserialize)]
 pub struct SelectableLessonList {
     lessons: Vec<Lesson>,
     selected_index: Option<usize>,
@@ -68,7 +71,7 @@ impl SelectableLessonList {
         }
     }
     pub fn add_record_to_current_session(&mut self, trainig_record: TrainingRecord) {
-        let mut entry = self
+        let entry = self
             .training_records
             .entry(self.selected_index.unwrap())
             .or_insert(Vec::new());
@@ -160,7 +163,7 @@ mod test_selectable_session_list {
     }
     #[test]
     fn test_get_current_lesson() {
-        let mut unit = SelectableLessonList {
+        let unit = SelectableLessonList {
             lessons: get_sample_lessons(),
             selected_index: Some(0),
             training_records: HashMap::new(),
@@ -169,7 +172,7 @@ mod test_selectable_session_list {
     }
     #[test]
     fn test_get_current_lesson_when_none_is_selected() {
-        let mut unit = SelectableLessonList {
+        let unit = SelectableLessonList {
             lessons: get_sample_lessons(),
             selected_index: None,
             training_records: HashMap::new(),

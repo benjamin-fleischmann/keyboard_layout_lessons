@@ -1,9 +1,17 @@
+use std::fs::OpenOptions;
+
+use crate::app::selectable_session_list::SelectableLessonList;
 use crate::app::trainer::TrainerApp;
 use crate::core::lesson::Lesson;
 use crate::core::weighting_strategy::WeightingStrategy;
 
+mod app;
+mod core;
+mod layouts;
+mod wrapper;
+
 fn create_bone_home_row_lessons() -> Vec<Lesson> {
-    let lesson_length = 8;
+    let lesson_length = 80;
     let word_length = 4;
 
     let mut lessons: Vec<Lesson> = Vec::new();
@@ -50,4 +58,17 @@ fn create_bone_home_row_lessons() -> Vec<Lesson> {
 pub fn create_bone_trainer() -> TrainerApp {
     let home_row_lessons = self::create_bone_home_row_lessons();
     TrainerApp::new(home_row_lessons)
+}
+
+fn main() -> anyhow::Result<()> {
+    let lessons = self::create_bone_home_row_lessons();
+    let data = SelectableLessonList::new(lessons);
+
+    let file = OpenOptions::new()
+        .write(true)
+        .create(true)
+        .truncate(true)
+        .open("save.json")?;
+    serde_json::to_writer(file, &data)?;
+    Ok(())
 }

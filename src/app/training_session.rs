@@ -1,23 +1,18 @@
-#[cfg(not(test))]
-use crate::wrapper::clock::Clock;
-#[cfg(test)]
-use crate::wrapper::fake_clock::FakeClock as Clock;
-
 use std::collections::VecDeque;
 use std::iter::FromIterator;
 
 use chrono::Duration;
 use chrono::{DateTime, Utc};
-// use std::time::Duration;
-
-// use std::time::SystemTime;
-use termion::event::Key;
 use tui::style::{Color, Style};
 use tui::text::{Span, Spans, Text};
 
 use crate::core::stats::{TrainingRecord, TrainingStatistics};
 use crate::core::typing_errors::TypingErrors;
 use crate::core::typing_speed::TypingSpeed;
+#[cfg(not(test))]
+use crate::wrapper::clock::Clock;
+#[cfg(test)]
+use crate::wrapper::fake_clock::FakeClock as Clock;
 
 enum InputResult {
     None,
@@ -51,11 +46,16 @@ impl TrainingSession {
             errors: 0,
         }
     }
+
     pub fn default() -> Self {
         TrainingSession::new(String::from(" "))
     }
+
     pub fn handle_key(&mut self, current_input: char) {
         if self.start_time == None {
+            if current_input == ' ' {
+                return;
+            }
             self.start_time = Some(Clock::now());
         }
         if current_input == self.current_char.unwrap() {
@@ -93,9 +93,11 @@ impl TrainingSession {
             ])],
         }
     }
+
     pub fn is_finished(&self) -> bool {
         self.current_char.is_none()
     }
+
     pub fn typing_speed(&self) -> TypingSpeed {
         if let Some(start_time) = self.start_time {
             let duration: Duration = self.end_time.unwrap_or(Clock::now()) - start_time;
@@ -139,8 +141,9 @@ mod test_training_session {
 
     use pretty_assertions::assert_eq;
 
-    use super::*;
     use crate::wrapper::fake_clock::FakeClock;
+
+    use super::*;
 
     #[test]
     fn test_characters_per_minute_also_counts_spaces() {
@@ -161,8 +164,6 @@ mod test_training_session {
     }
     #[test]
     fn test_characters_per_minute_is_undefined_if_not_started() {
-        let now = Utc::now();
-        let in_1_minute = now.add(Duration::minutes(1));
         let content_with_15_chars = "abcde fghijklmn";
         let unit = TrainingSession {
             lesson_content: content_with_15_chars.to_string(),

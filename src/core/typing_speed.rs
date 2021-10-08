@@ -1,4 +1,6 @@
-#[derive(Debug, PartialEq, Copy, Clone)]
+use serde::{Deserialize, Serialize};
+
+#[derive(Debug, PartialEq, Copy, Clone, Serialize, Deserialize)]
 pub enum TypingSpeed {
     WordsPerMinute(u16),
     CharactersPerMinute(u16),
@@ -15,7 +17,6 @@ impl TypingSpeed {
 #[cfg(test)]
 mod test_training_session {
     use pretty_assertions::assert_eq;
-    use std::ops::Add;
 
     use super::*;
 

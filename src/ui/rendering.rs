@@ -1,7 +1,7 @@
 use tui::backend::Backend;
 use tui::layout::{Constraint, Direction, Layout, Rect};
 use tui::style::{Color, Modifier, Style};
-use tui::text::{Span, Text};
+use tui::text::Span;
 use tui::widgets::{
     Axis, Block, Borders, Chart, Dataset, Gauge, GraphType, List, ListItem, ListState, Paragraph,
     Row, Table,
@@ -79,10 +79,10 @@ fn draw_training<B: Backend>(f: &mut Frame<B>, app: &TrainerApp, area: Rect) {
     let progress_widget = Gauge::default()
         .block(Block::default().title("Progress:").borders(Borders::ALL))
         .gauge_style(style.add_modifier(Modifier::ITALIC | Modifier::BOLD))
-        .ratio(app.lesson_progress.progress());
+        .ratio(app.lesson_progress().progress());
     f.render_widget(progress_widget, chunks[0]);
 
-    let training_stats = app.lesson_progress.stats();
+    let training_stats = app.lesson_progress().stats();
     let current_training_statistics_widget = Table::new(vec![
         // Row can be created from simple strings.
         Row::new(vec!["WPM", "Errors"]),
@@ -96,7 +96,7 @@ fn draw_training<B: Backend>(f: &mut Frame<B>, app: &TrainerApp, area: Rect) {
     .style(style);
     f.render_widget(current_training_statistics_widget, chunks[1]);
 
-    let lesson_text_widget = Paragraph::new(app.lesson_progress.get_diff());
+    let lesson_text_widget = Paragraph::new(app.lesson_progress().get_diff());
     f.render_widget(lesson_text_widget, chunks[2]);
 }
 fn draw_statistics<B: Backend>(f: &mut Frame<B>, app: &TrainerApp, area: Rect) {
@@ -108,83 +108,89 @@ fn draw_statistics<B: Backend>(f: &mut Frame<B>, app: &TrainerApp, area: Rect) {
         .constraints([Constraint::Ratio(1, 2), Constraint::Ratio(1, 2)])
         .margin(1)
         .split(area);
-
     let current_training_records = app.lesson_list.current_lesson_records();
-    let wpm_data = c![(x.0 as f64, x.1.stats.typing_speed.words_per_minute()as f64), for x in current_training_records.iter().enumerate()];
+    render_wpm_chart(f, current_training_records, chunks[0]);
+    render_error_chart(f, current_training_records, chunks[1]);
+}
 
+fn render_wpm_chart<B: Backend>(
+    f: &mut Frame<B>,
+    current_training_records: &[TrainingRecord],
+    area: Rect,
+) {
+    let style = get_inactive_style();
+    let wpm_data =
+        c![r.stats.typing_speed.words_per_minute(), for r in current_training_records.iter()];
+    let axis_max_wpm = match wpm_data.iter().max() {
+        None => 80,
+        Some(wpm) => wpm + 20 - wpm % 20,
+    };
+    let wpm_axis_labels =
+        c![Span::from(wpm.to_string()), for wpm in (0..=axis_max_wpm).step_by(20)];
+    let chart_data = c![(x.0 as f64, *x.1 as f64), for x in wpm_data.iter().enumerate()];
     let wpm_dataset = Dataset::default()
         .name("WPM")
-        .marker(symbols::Marker::Braille)
+        .marker(symbols::Marker::Dot)
         .graph_type(GraphType::Line)
-        .style(Style::default().fg(Color::Magenta))
-        .data(&wpm_data);
+        .style(style)
+        .data(&chart_data);
     let wpm_chart = Chart::new(vec![wpm_dataset])
+        .block(Block::default())
         .x_axis(
             Axis::default()
-                .title(Span::styled("", Style::default()))
-                .style(Style::default().fg(Color::White))
+                .title(Span::styled("", style))
+                .style(style)
                 .bounds([0.0, wpm_data.len() as f64]),
         )
         .y_axis(
             Axis::default()
-                .title(Span::styled("WPM", Style::default().fg(Color::Red)))
-                .style(Style::default().fg(Color::White))
-                .bounds([0.0, 80.0])
-                .labels(
-                    ["0.0", "20", "40.0", "60.0", "80.0"]
-                        .iter()
-                        .cloned()
-                        .map(Span::from)
-                        .collect(),
-                ),
+                .title(Span::styled("WPM", style))
+                .style(style)
+                .bounds([0.0, axis_max_wpm as f64])
+                .labels(wpm_axis_labels),
         );
 
-    f.render_widget(wpm_chart, chunks[0]);
-    // let datasets = vec![
-    //     Dataset::default()
-    //         .name("Errors")
-    //         .marker(symbols::Marker::Dot)
-    //         .graph_type(GraphType::Line)
-    //         .style(Style::default().fg(Color::Cyan))
-    //         .data(&[(4.0, 5.0), (5.0, 8.0), (7.66, 13.5)]),
-    //     Dataset::default()
-    //         .name("WPM")
-    //         .marker(symbols::Marker::Braille)
-    //         .graph_type(GraphType::Line)
-    //         .style(Style::default().fg(Color::Magenta))
-    //         .data(&[(4.0, 5.0), (5.0, 8.0), (7.66, 13.5)]),
-    // ];
-    // let chart = Chart::new(datasets)
-    //     .block(Block::default().title("Statistics").borders(Borders::ALL))
-    //     .x_axis(
-    //         Axis::default()
-    //             .title(Span::styled("X Axis", Style::default().fg(Color::Red)))
-    //             .style(Style::default().fg(Color::White))
-    //             .bounds([0.0, 10.0])
-    //             .labels(
-    //                 ["0.0", "5.0", "10.0"]
-    //                     .iter()
-    //                     .cloned()
-    //                     .map(Span::from)
-    //                     .collect(),
-    //             ),
-    //     )
-    //     .y_axis(
-    //         Axis::default()
-    //             .title(Span::styled("Y Axis", Style::default().fg(Color::Red)))
-    //             .style(Style::default().fg(Color::White))
-    //             .bounds([0.0, 10.0])
-    //             .labels(
-    //                 ["0.0", "5.0", "10.0"]
-    //                     .iter()
-    //                     .cloned()
-    //                     .map(Span::from)
-    //                     .collect(),
-    //             ),
-    //     );
-    //
-    // f.render_widget(chart, chunks[1]);
+    f.render_widget(wpm_chart, area);
 }
+
+fn render_error_chart<B: Backend>(
+    f: &mut Frame<B>,
+    current_training_records: &[TrainingRecord],
+    area: Rect,
+) {
+    let style = get_inactive_style();
+    let error_data = c![r.stats.errors.total_error_count, for r in current_training_records.iter()];
+    let axis_max_error = match error_data.iter().max() {
+        None => 20,
+        Some(error_count) => error_count + 10 - error_count % 10,
+    };
+    let error_axis_labels =
+        c![Span::from(wpm.to_string()), for wpm in (0..=axis_max_error).step_by(5)];
+    let chart_data = c![(x.0 as f64, *x.1 as f64), for x in error_data.iter().enumerate()];
+    let error_dataset = Dataset::default()
+        .name("Errors")
+        .marker(symbols::Marker::Dot)
+        .graph_type(GraphType::Line)
+        .style(style)
+        .data(&chart_data);
+    let error_chart = Chart::new(vec![error_dataset])
+        .x_axis(
+            Axis::default()
+                .title(Span::styled("", style))
+                .style(style)
+                .bounds([0.0, error_data.len() as f64]),
+        )
+        .y_axis(
+            Axis::default()
+                .title(Span::styled("Errors", style))
+                .style(style)
+                .bounds([0.0, axis_max_error as f64])
+                .labels(error_axis_labels),
+        );
+
+    f.render_widget(error_chart, area);
+}
+
 fn get_style_depending_on_app_state(current_state: &AppState, active_state: AppState) -> Style {
     if current_state == &active_state {
         get_active_style()

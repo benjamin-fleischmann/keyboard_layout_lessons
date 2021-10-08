@@ -1,6 +1,6 @@
 use chrono::Duration;
 use chrono::{DateTime, Utc};
-use std::cell::{RefCell, RefMut};
+use std::cell::RefCell;
 use std::ops::Add;
 
 pub struct FakeClock {
@@ -38,7 +38,7 @@ impl FakeClock {
 #[cfg(test)]
 mod test_fake_clock {
     use crate::wrapper::fake_clock::FakeClock;
-    use chrono::{DateTime, Duration, NaiveDateTime, Utc};
+    use chrono::{DateTime, Duration, Utc};
     use std::ops::Add;
     use std::thread;
 
@@ -59,13 +59,9 @@ mod test_fake_clock {
     }
     #[test]
     fn fake_advances() {
-        let time1: DateTime<Utc> = DateTime::parse_from_rfc3339("2000-01-01T12:00:00Z")
-            .unwrap()
-            .with_timezone(&Utc);
-        let expected_duration = Duration::days(1);
         let time1 = FakeClock::now();
+        let expected_duration = Duration::days(1);
         FakeClock::advance(expected_duration);
-        let time2 = FakeClock::now();
         assert_eq!(time1.add(expected_duration), FakeClock::now())
     }
 }

@@ -8,9 +8,14 @@ edition = "2018"
 name = "trainer"
 path = "src/main.rs"
 
+[[bin]]
+name = "create_bone_lessons"
+path = "src/bone_app.rs"
+
 [dependencies]
+anyhow = "1.0"
 cute = "*"
-chrono = "*"
+chrono = {version="*", features = ["serde"]}
 rand = "*"
 termion = "1.5"
 serde = {version = "*", features = ["derive"] }

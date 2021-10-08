@@ -1,3 +1,6 @@
+use std::fs::OpenOptions;
+
+use serde_json;
 use termion::event::Key;
 
 use crate::app::selectable_session_list::SelectableLessonList;
@@ -7,8 +10,9 @@ use crate::core::lesson::Lesson;
 
 pub struct TrainerApp {
     pub lesson_list: SelectableLessonList,
-    pub lesson_progress: TrainingSession,
+    lesson_progress: TrainingSession,
     state: AppState,
+    file_path: String,
 }
 
 impl TrainerApp {
@@ -17,7 +21,27 @@ impl TrainerApp {
             lesson_list: SelectableLessonList::new(lessons),
             lesson_progress: TrainingSession::default(),
             state: AppState::LessonSelection,
+            file_path: String::new(),
         }
+    }
+    pub fn load(file_path: String) -> Result<TrainerApp, anyhow::Error> {
+        let file = OpenOptions::new().read(true).open(&file_path)?;
+        let data = serde_json::from_reader(file)?;
+        Ok(TrainerApp {
+            lesson_list: data,
+            lesson_progress: TrainingSession::default(),
+            state: AppState::LessonSelection,
+            file_path,
+        })
+    }
+    pub fn save(&self) {
+        let file = OpenOptions::new()
+            .write(true)
+            .create(true)
+            .truncate(true)
+            .open(&self.file_path)
+            .unwrap();
+        serde_json::to_writer(file, &self.lesson_list).unwrap();
     }
     pub fn state(&self) -> &AppState {
         &self.state
@@ -53,7 +77,7 @@ impl TrainerApp {
                 if self.lesson_progress.is_finished() {
                     self.lesson_list
                         .add_record_to_current_session(self.lesson_progress.training_record());
-                    self.state = AppState::LessonSelection;
+                    self.start_session();
                 }
             }
             _ => {}

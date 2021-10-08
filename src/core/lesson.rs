@@ -78,7 +78,7 @@ impl Lesson {
         let mut word = String::new();
         let rng = &mut rand::thread_rng();
         while word.len() < self.word_length as usize {
-            let next_key = self.keys.choose_weighted(rng, |item| 1.0).unwrap().value;
+            let next_key = self.keys.choose(rng).unwrap().value;
             word.push(next_key);
         }
         word
