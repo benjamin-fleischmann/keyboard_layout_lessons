@@ -7,7 +7,6 @@ use crate::core::weighting_strategy::WeightingStrategy;
 
 mod app;
 mod core;
-mod layouts;
 mod wrapper;
 
 fn create_bone_home_row_lessons() -> Vec<Lesson> {

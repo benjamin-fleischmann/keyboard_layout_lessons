@@ -43,8 +43,6 @@ impl Events {
         Events { rx, _tx: tx }
     }
 
-    /// Attempts to read an event.
-    /// This function block the current thread.
     pub fn next(&self) -> Result<OptionalInput, RecvError> {
         self.rx.recv()
     }

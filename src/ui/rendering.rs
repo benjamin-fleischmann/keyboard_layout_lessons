@@ -84,7 +84,6 @@ fn draw_training<B: Backend>(f: &mut Frame<B>, app: &TrainerApp, area: Rect) {
 
     let training_stats = app.lesson_progress().stats();
     let current_training_statistics_widget = Table::new(vec![
-        // Row can be created from simple strings.
         Row::new(vec!["WPM", "Errors"]),
         Row::new(vec![
             training_stats.typing_speed.words_per_minute().to_string(),

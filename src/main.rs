@@ -16,9 +16,7 @@ use crate::ui::events::Events;
 extern crate cute;
 
 mod app;
-// mod bone_app;
 mod core;
-mod layouts;
 mod ui;
 mod wrapper;
 
